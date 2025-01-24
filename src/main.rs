@@ -85,7 +85,8 @@ struct Content {
 }
 impl Content {
     fn new(_cc: &eframe::CreationContext<'_>) -> Self {
-        let path_data = fs::read_to_string("~/.config/reloc8.json").unwrap();
+        let home_path = env::var("HOME").expect("Home enviroment variable not set");
+        let path_data = fs::read_to_string(format!("{home_path}/.config/reloc8.json")).unwrap();
         let start_path = env::args()
             .collect::<Vec<String>>()
             .get(1)
