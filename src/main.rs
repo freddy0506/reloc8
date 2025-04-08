@@ -2,7 +2,7 @@
 
 use chrono;
 use eframe::egui;
-use egui::Key;
+use egui::{Key, Layout};
 use log::{debug, info};
 use serde;
 use serde_json;
@@ -12,6 +12,7 @@ use std::fs;
 use std::path::Path;
 use std::process::Command;
 
+
 #[derive(serde::Deserialize, PartialEq, Clone, Default, Debug)]
 struct TargetPath {
     name: String,
@@ -20,10 +21,12 @@ struct TargetPath {
 
 fn main() -> eframe::Result {
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
-    let options = eframe::NativeOptions::default();
+    let mut options = eframe::NativeOptions::default();
+    options.centered = true;
+    options.viewport = options.viewport.with_inner_size(egui::Vec2::new(400 as f32, 500 as f32)).with_resizable(true);
 
     eframe::run_native(
-        "Sort Download",
+        "reloc8",
         options,
         Box::new(|cc| Ok(Box::new(Content::new(cc)))),
     )
@@ -115,7 +118,9 @@ impl Content {
 
 impl eframe::App for Content {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        egui::CentralPanel::default().show(ctx, |ui| {
+        egui::CentralPanel::default().show(ctx, |u| { 
+            ctx.set_pixels_per_point(1.8);
+            u.with_layout(Layout::top_down(egui::Align::Center), |ui| {
             ui.heading("Where does this file belong?");
             let name_input =
                 ui.add(egui::TextEdit::singleline(&mut self.filename).lock_focus(true));
@@ -129,10 +134,14 @@ impl eframe::App for Content {
             }
             */
             for p in self.paths.clone() {
-                ui.selectable_value(&mut self.current_path, p.clone(), p.name);
+                 ui.selectable_value(&mut self.current_path, p.clone(), p.name);
             }
 
-            ui.label(format!("{:?}", self.current_path));
+            // show the screen for debugging
+            // ui.label(format!("{:?}", self.current_path));
+            if ctx.input(|i| i.key_pressed(Key::Q)) {
+                ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close);
+            }
 
             if !name_input.has_focus() {
                 if ctx.input(|i| i.key_pressed(Key::J)) {
@@ -188,6 +197,6 @@ impl eframe::App for Content {
                     ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close);
                 }
             }
-        });
+        })});
     }
 }
